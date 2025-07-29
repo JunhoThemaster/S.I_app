@@ -21,7 +21,7 @@ const SideBar: React.FC = () => {
               to="/settings"
               className={({ isActive }: { isActive: boolean }) => (isActive ? 'active' : '')}
             >
-              ⚙️ 설정
+              ⚙️ 환경 설정
             </NavLink>
           </li>
         </ul>
