@@ -1,13 +1,54 @@
-import React from "react";
+import React, { useState } from "react";
+import PoseTracker from "../components/PoseTracker";
+import "../dashboard.css";
 
-const Main:React.FC = () => {
-    return (
-         <div style={{ padding: '2rem' }}>
-      <h1>📊 Dashboard</h1>
-      <p>여기에 다양한 위젯이나 통계 데이터를 표시할 수 있습니다.</p>
+const DashBoard: React.FC = () => {
+  const [showCamera, setShowCamera] = useState(false);
+  const [animate, setAnimate] = useState(false);
+
+  const handleStartCamera = () => {
+    setAnimate(true);
+
+    // 0.8초 후에 PoseTracker 시작
+    setTimeout(() => {
+      setShowCamera(true);
+      setAnimate(false);
+    }, 800);
+  };
+
+  const handleStopCamera = () => {
+    setShowCamera(false);
+  };
+
+  const handleResult = (landmarkBatch: any, imageBlob: Blob) => {
+    console.log("🟡 15개 프레임 수집 완료");
+    console.log("🟢 랜드마크:", landmarkBatch);
+    console.log("🖼 이미지 Blob:", imageBlob);
+  };
+
+  return (
+    <div style={{ padding: "2rem" }}>
+      <h1>📺 Dashboard</h1>
+
+      {/* ✅ 버튼 영역 */}
+      {!showCamera && (
+        <button onClick={handleStartCamera} className="tv-button">
+          카메라 열기
+        </button>
+      )}
+      {showCamera && (
+        <button onClick={handleStopCamera} className="tv-button stop">
+          카메라 끄기
+        </button>
+      )}
+
+      {/* 📦 PoseTracker 렌더링 영역 */}
+      <div className="pose-wrapper">
+        {animate && <div className="tv-startup-overlay" />}
+        {showCamera && <PoseTracker onResult={handleResult} />}
+      </div>
     </div>
-    );
+  );
 };
 
-
-export default Main;
+export default DashBoard;
