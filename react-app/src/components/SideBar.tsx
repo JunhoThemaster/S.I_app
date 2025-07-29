@@ -8,12 +8,19 @@ const SideBar: React.FC = () => {
       <nav>
         <ul>
           <li>
-            <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }: { isActive: boolean }) => (isActive ? 'active' : '')}
+            >
               🏠 홈
             </NavLink>
           </li>
           <li>
-            <NavLink to="/settings" className={({ isActive }) => isActive ? 'active' : ''}>
+            <NavLink
+              to="/settings"
+              className={({ isActive }: { isActive: boolean }) => (isActive ? 'active' : '')}
+            >
               ⚙️ 설정
             </NavLink>
           </li>
