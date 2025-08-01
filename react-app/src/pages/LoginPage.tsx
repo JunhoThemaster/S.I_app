@@ -1,42 +1,47 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/user';
+// src/pages/LoginPage.tsx
 
-const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+import React, { useState } from "react";
+import { loginUser } from "../api/user";
+import { useNavigate } from "react-router-dom";
+interface Props {
+  onLoginSuccess: () => void;
+}
+
+const LoginPage: React.FC<Props> = ({ onLoginSuccess }) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
-
   const handleLogin = async () => {
     try {
-      await loginUser(username, password);
-      localStorage.setItem('isLoggedIn', 'true'); // 로그인 상태 저장
-      navigate('/dashboard');
-    } catch (err) {
-      setErrorMsg('아이디 또는 비밀번호가 잘못되었습니다.');
+      const data = await loginUser(username, password);
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("isLoggedIn", "true");
+      onLoginSuccess(); // ✅ App.tsx에게 "로그인 성공!" 알림
+      navigate("/dashboard");
+      
+    } catch (error) {
+      alert("로그인 실패");
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '5rem auto' }}>
+    <div>
       <h2>로그인</h2>
       <input
         type="text"
-        placeholder="아이디"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
+        placeholder="아이디"
       />
       <br />
       <input
         type="password"
-        placeholder="비밀번호"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        placeholder="비밀번호"
       />
       <br />
       <button onClick={handleLogin}>로그인</button>
-      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
     </div>
   );
 };

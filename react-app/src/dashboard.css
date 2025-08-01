@@ -1,0 +1,57 @@
+.pose-wrapper {
+  position: relative;
+  width: 640px;
+  height: 480px;
+  margin: 2rem auto;
+}
+
+.tv-startup-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 640px;
+  height: 480px;
+  background: black;
+  transform: scaleX(-1); /* 카메라 반전과 동기화 */
+  z-index: 10;
+  animation: tvOn 0.8s ease forwards;
+  pointer-events: none;
+}
+.tv-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-bottom: 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tv-button:hover {
+  background-color: #0056b3;
+}
+
+.tv-button.stop {
+  background-color: #dc3545;
+}
+
+.tv-button.stop:hover {
+  background-color: #a71d2a;
+}
+
+@keyframes tvOn {
+  0% {
+    transform: scaleX(-1) scaleY(0.2);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleX(-1) scaleY(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(-1) scaleY(1);
+    opacity: 0;
+  }
+}
