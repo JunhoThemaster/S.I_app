@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PoseTracker from "../components/PoseTracker";
+import VoiceLevelMeter from "../components/VoiceLevelMeter"; // ✅ 추가
 import "../dashboard.css";
 
 const DashBoard: React.FC = () => {
@@ -8,8 +9,6 @@ const DashBoard: React.FC = () => {
 
   const handleStartCamera = () => {
     setAnimate(true);
-
-    // 0.8초 후에 PoseTracker 시작
     setTimeout(() => {
       setShowCamera(true);
       setAnimate(false);
@@ -29,6 +28,9 @@ const DashBoard: React.FC = () => {
   return (
     <div style={{ padding: "2rem" }}>
       <h1>📺 Dashboard</h1>
+
+      {/* ✅ 마이크 감지 표시 */}
+      <VoiceLevelMeter />
 
       {/* ✅ 버튼 영역 */}
       {!showCamera && (
