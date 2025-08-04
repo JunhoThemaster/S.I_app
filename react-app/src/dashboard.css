@@ -56,3 +56,47 @@
     transform: rotate(360deg);
   }
 }
+
+/* ✅ 자세 불안정 시 깜빡이는 경고 UI */
+.blinker-warning {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 40px auto 40px;  /* 좌-텍스트-우 고정 레이아웃 */
+  align-items: center;
+  column-gap: 12px;
+  z-index: 10;
+}
+
+.blinker-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.blinker {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: red;
+  animation: blink 0.6s infinite alternate;
+  box-shadow: 0 0 10px red;
+}
+
+.warning-text {
+  font-weight: bold;
+  color: red;
+  font-size: 18px;
+  text-align: center;
+}
+
+@keyframes blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.2;
+  }
+}
