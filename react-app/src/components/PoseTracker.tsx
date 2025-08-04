@@ -177,7 +177,7 @@ const PoseTracker: React.FC<PoseTrackerProps> = ({ onCameraReady }) => {
           const ear = calculateEAR(landmarks);
           earRef.current = ear;
           processBlink(ear);
-          console.log("👁️ EAR:", ear.toFixed(3));
+          //console.log("👁️ EAR:", ear.toFixed(3));
         }
         drawAll();
       });
@@ -200,7 +200,7 @@ const PoseTracker: React.FC<PoseTrackerProps> = ({ onCameraReady }) => {
     };
 
     const initWebSocket = () => {
-      socketRef.current = new WebSocket("ws://localhost:8000/ws/analyze");
+      socketRef.current = new WebSocket("ws://localhost:8000/ws/video");
 
       socketRef.current.onopen = () => {
         console.log("✅ WebSocket 연결됨");

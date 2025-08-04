@@ -1,8 +1,8 @@
 .camera-container {
-  position: relative;
+  position: absolute;
   width: 640px;
   height: 480px;
-  margin-top: 20px;
+  
 }
 
 /* ✅ 영상 중복 방지를 위해 비디오 요소 숨김 */

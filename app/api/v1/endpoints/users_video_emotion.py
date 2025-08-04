@@ -28,6 +28,8 @@ async def analyze_ws(websocket: WebSocket):
             image = Image.open(io.BytesIO(image_data)).convert("RGB")
             np_img = np.array(image)
 
+            image.save('debug__.jpg')
+
             # ✅ DeepFace 감정 분석
             try:
                 result = DeepFace.analyze(np_img, actions=["emotion"], enforce_detection=False)[0]
