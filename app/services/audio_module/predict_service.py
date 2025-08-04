@@ -2,8 +2,10 @@ import numpy as np
 import librosa
 import sounddevice as sd
 import torch
-from services.audio_module import extract_melspectogram
-from DL_model import CNNBiLSTM
+from .extract_melspectogram import preprocess_audio
+
+
+from ...DL_model.CNNBILSTM import CNNBiLSTM
 
 # 📐 오디오 파라미터 설정
 SR = 16000           # 샘플링 레이트
@@ -13,9 +15,9 @@ DEVICE_INDEX = 1
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = CNNBiLSTM().to(device)
-model.load_state_dict(torch.load("audio_model.pth", map_location=device))
+model.load_state_dict(torch.load("/home/user2/바탕화면/S.I_app/app/services/audio_module/audio_model.pth", map_location=device))
 model.eval()
-label_classes = np.load("label_encoder_classes.npy", allow_pickle=True)
+label_classes = np.load("/home/user2/바탕화면/S.I_app/app/services/audio_module/label_encoder_classes.npy", allow_pickle=True)
 
 
 

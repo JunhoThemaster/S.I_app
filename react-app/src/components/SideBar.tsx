@@ -16,12 +16,12 @@ const SideBar: React.FC = () => {
               🏠 홈
             </NavLink>
           </li>
-          <li>
+           <li>
             <NavLink
-              to="/settings"
+              to="/records"
               className={({ isActive }: { isActive: boolean }) => (isActive ? 'active' : '')}
             >
-              ⚙️ 환경 설정
+              🗂 나의 기록
             </NavLink>
           </li>
         </ul>

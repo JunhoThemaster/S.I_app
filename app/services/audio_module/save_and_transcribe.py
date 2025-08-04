@@ -13,6 +13,6 @@ def save_wave_and_transcribe(pcm_data: bytes, sample_rate: int, model):
         path = f.name
 
     # 2. Whisper로 전사
-    segments, _ = model.transcribe(path)
+    segments, info = model.transcribe(path, language="ko")  # 👈 이 부분 중요
     text = " ".join([seg.text for seg in segments])
     return text.strip()

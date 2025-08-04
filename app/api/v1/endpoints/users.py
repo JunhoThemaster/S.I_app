@@ -2,20 +2,30 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import jwt
 import datetime
-from services.JwtUitls import token_utils
+from ....services.JwtUitls import token_utils
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from faster_whisper import WhisperModel
-from services.audio_module import save_and_transcribe,predict_service
-from services.websocket import ms
+from ....services.audio_module import save_and_transcribe,predict_service
+from ....services.websocket import manager as ms
 import numpy as np
-
+from scipy.signal import resample_poly
+from fastapi import APIRouter, Query
+import openai
+import librosa
 
 
 def convert_pcm16_bytes_to_float32_array(pcm_bytes: bytes) -> np.ndarray:
     int16_array = np.frombuffer(pcm_bytes, dtype=np.int16)
     float_array = int16_array.astype(np.float32) / 32768.0  # normalize to [-1, 1]
     return float_array
-
+def downsample_to_16k(audio: np.ndarray, orig_sr: int) -> np.ndarray:
+    if orig_sr == 16000:
+        return audio
+    # up/down 비율 계산
+    gcd = np.gcd(orig_sr, 16000)
+    up = 16000 // gcd
+    down = orig_sr // gcd
+    return resample_poly(audio, up, down)
 
 
 
@@ -52,7 +62,7 @@ def login(data: LoginData):
 
 ## 오디오 송신 웹소켓 엔드포인트
 
-model = WhisperModel("base", device="cpu")
+model = WhisperModel("base", device="cuda", compute_type="float16")
 manager = ms.ConnectionManager()
 
 @router.websocket("/ws/audio/{user_id}")
@@ -64,28 +74,31 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
     await manager.connect(websocket, user_id)
 
     buffer = bytearray()
-    sample_rate = 16000
+    orig_sample_rate = 48000
+    target_sample_rate = 16000
     bytes_per_sample = 2
-    min_bytes = sample_rate * bytes_per_sample * 3  # 최소 3초 분량 이상일 때만 전사 시도
+    min_bytes = orig_sample_rate * bytes_per_sample * 3  # 3초 기준 (프론트는 48kHz)
 
     try:
         while True:
             data = await websocket.receive_bytes()
             buffer.extend(data)
 
-            # 일정 이상 길이 되었을 때 전사 시도
             if len(buffer) >= min_bytes:
-                temp_buffer = buffer[:]  # 버퍼 복사 (삭제하지 않음)
-                text = save_and_transcribe(temp_buffer, sample_rate, model)
-                print(f"📝 {user_id} → {text}")
+                temp_buffer = buffer[:]  # 복사
+                float_audio = convert_pcm16_bytes_to_float32_array(temp_buffer)
+                audio_16k = downsample_to_16k(float_audio, orig_sr=orig_sample_rate)
 
+                # Whisper
+                text = save_and_transcribe.save_wave_and_transcribe(
+                    audio_16k, target_sample_rate, model
+                )
+                print(f"📝 {user_id} → {text}")
                 await manager.send_to_user(user_id, {"text": text})
 
                 if "이상입니다" in text:
                     print(f"✅ '{user_id}' 응답 종료 감지됨. 감정 분석 시작")
-                    float_audio = convert_pcm16_bytes_to_float32_array(temp_buffer)    
-                    # 🔹 감정 분석 모델에 버퍼 넘기기
-                    emotion = predict_service.predict_emotion(float_audio)
+                    emotion = predict_service.predict_emotion(audio_16k)
                     print(f"🎯 감정 결과: {emotion}")
 
                     await manager.send_to_user(user_id, {
@@ -94,8 +107,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
                         "answer": text
                     })
 
-                    # 🔁 다음 응답 위해 버퍼 초기화
-                    buffer = bytearray()
+                buffer = bytearray()  # 초기화
 
     except WebSocketDisconnect:
         manager.disconnect(user_id)
@@ -109,8 +121,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
 
 
 
-from fastapi import APIRouter, Query
-import openai
 
 class FieldRequest(BaseModel):
     field: str
