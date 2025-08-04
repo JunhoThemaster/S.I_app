@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.endpoints.users import router as user_router
+from app.api.v1.endpoints.websocket_router import router as websocket_router  # ✅ WebSocket 라우터 등록
 
 
 app = FastAPI()
@@ -18,7 +19,7 @@ app.add_middleware(
 
 # 라우터 등록
 app.include_router(user_router)
-
+app.include_router(websocket_router)
 
 
 
