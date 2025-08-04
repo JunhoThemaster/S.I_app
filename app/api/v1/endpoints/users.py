@@ -114,14 +114,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
 
 
 
-
-
-
-
-
-
-
-
 class FieldRequest(BaseModel):
     field: str
 
