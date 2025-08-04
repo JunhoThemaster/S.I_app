@@ -27,3 +27,6 @@ export const drawConnectors = (
     ctx.stroke();
   }
 };
+
+
+
