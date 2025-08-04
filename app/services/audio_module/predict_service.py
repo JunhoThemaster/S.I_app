@@ -15,9 +15,9 @@ DEVICE_INDEX = 1
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = CNNBiLSTM().to(device)
-model.load_state_dict(torch.load("/home/user2/바탕화면/S.I_app/app/services/audio_module/audio_model.pth", map_location=device))
+model.load_state_dict(torch.load("app/services/audio_module/audio_model.pth", map_location=device))
 model.eval()
-label_classes = np.load("/home/user2/바탕화면/S.I_app/app/services/audio_module/label_encoder_classes.npy", allow_pickle=True)
+label_classes = np.load("app/services/audio_module/label_encoder_classes.npy", allow_pickle=True)
 
 
 
