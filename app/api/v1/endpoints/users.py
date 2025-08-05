@@ -62,55 +62,50 @@ def login(data: LoginData):
 
 ## 오디오 송신 웹소켓 엔드포인트
 
+
+import tempfile
+from fastapi import APIRouter, UploadFile, File, WebSocket, HTTPException, Query
+
 model = WhisperModel("base", device="cuda", compute_type="float16")
 manager = ms.ConnectionManager()
 
-@router.websocket("/ws/audio/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
+from ....services.audio_module import save_and_transcribe, predict_service
+from ....services.audio_module.audio_io import load_audio_float32  # librosa 대체용
+@router.post("/audio/{user_id}")
+async def audio_analyze(user_id: str, token: str = Query(...), file: UploadFile = File(...)):
     if not token_utils.verify_token(token):
-        await websocket.close()
-        return
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
-    await manager.connect(websocket, user_id)
+    # 1. .webm 파일 저장
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp:
+        contents = await file.read()
+        tmp.write(contents)
+        tmp_path = tmp.name
 
-    buffer = bytearray()
-    orig_sample_rate = 48000
-    target_sample_rate = 16000
-    bytes_per_sample = 2
-    min_bytes = orig_sample_rate * bytes_per_sample * 3  # 3초 기준 (프론트는 48kHz)
+    # 2. Whisper 전사
+    text = save_and_transcribe.save_wave_and_transcribe_from_path(
+        path=tmp_path,
+        sample_rate=16000,
+        model=model
+    )
 
-    try:
-        while True:
-            data = await websocket.receive_bytes()
-            buffer.extend(data)
+    # 3. float32 waveform 로드
+    y = load_audio_float32(tmp_path)
 
-            if len(buffer) >= min_bytes:
-                temp_buffer = buffer[:]  # 복사
-                float_audio = convert_pcm16_bytes_to_float32_array(temp_buffer)
-                audio_16k = downsample_to_16k(float_audio, orig_sr=orig_sample_rate)
+    # 4. 감정 분석
+    emotion = predict_service.predict_emotion(y)
 
-                # Whisper
-                text = save_and_transcribe.save_wave_and_transcribe(
-                    audio_16k, target_sample_rate, model
-                )
-                print(f"📝 {user_id} → {text}")
-                await manager.send_to_user(user_id, {"text": text})
+    # 5. WebSocket으로 결과 전달
+    await manager.send_to_user(user_id, {
+        "command": "AUDIO_ANALYSIS_RESULT",
+        "text": text.strip(),
+        "emotion": emotion
+    })
 
-                if "이상입니다" in text:
-                    print(f"✅ '{user_id}' 응답 종료 감지됨. 감정 분석 시작")
-                    emotion = predict_service.predict_emotion(audio_16k)
-                    print(f"🎯 감정 결과: {emotion}")
-
-                    await manager.send_to_user(user_id, {
-                        "command": "NEXT_QUESTION",
-                        "emotion": emotion,
-                        "answer": text
-                    })
-
-                buffer = bytearray()  # 초기화
-
-    except WebSocketDisconnect:
-        manager.disconnect(user_id)
+    return {
+        "text": text.strip(),
+        "emotion": emotion
+    }
 
 
 

@@ -1,18 +1,19 @@
-# utils.py
+import numpy as np
 import tempfile
 import wave
+import librosa
 
-def save_wave_and_transcribe(pcm_data: bytes, sample_rate: int, model):
-    # 1. 임시 WAV 파일로 저장
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        with wave.open(f, "wb") as wf:
-            wf.setnchannels(1)             # mono
-            wf.setsampwidth(2)             # 16-bit
-            wf.setframerate(sample_rate)   # 16kHz
-            wf.writeframes(pcm_data)
-        path = f.name
+def save_wave_and_transcribe_from_path(path: str, sample_rate: int, model):
+    import soundfile as sf
+    from scipy.signal import resample_poly
+    import numpy as np
 
-    # 2. Whisper로 전사
-    segments, info = model.transcribe(path, language="ko")  # 👈 이 부분 중요
-    text = " ".join([seg.text for seg in segments])
-    return text.strip()
+    y, sr = sf.read(path)
+    if y.ndim > 1:
+        y = y.mean(axis=1)
+    if sr != sample_rate:
+        y = resample_poly(y, sample_rate, sr)
+    y = y.astype(np.float32)
+
+    segments, _ = model.transcribe(y, language="ko")
+    return " ".join([seg.text for seg in segments])
